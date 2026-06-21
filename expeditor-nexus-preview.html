@@ -1,0 +1,851 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="utf-8">
+<title>Expeditor Nexus CEPACE v1.0 — Preview Interativo</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{min-height:100vh;font-family:'Segoe UI',system-ui,sans-serif}
+body{
+  background:linear-gradient(160deg,#0a1628 0%,#0e1e35 60%,#0c1a2e 100%);
+  display:flex;flex-direction:column;align-items:center;justify-content:flex-start;
+  padding:24px 16px 40px;min-height:100vh;
+}
+.outer-label{color:#3a5a7a;font-size:11px;font-weight:600;letter-spacing:.8px;text-transform:uppercase;margin-bottom:10px;text-align:center}
+.bg-projudi{position:fixed;inset:0;z-index:0;overflow:hidden;background:linear-gradient(160deg,#0a1628 0%,#0e1e35 60%,#0c1a2e 100%)}
+.bg-strip{position:absolute;top:0;left:0;right:0;height:42px;background:linear-gradient(90deg,#0d2244,#0f2a50);border-bottom:1px solid #1a3a5a;display:flex;align-items:center;padding:0 20px}
+.bg-strip-logo{color:#4a7a9a;font:700 12px 'Courier New',monospace;letter-spacing:.5px}
+.bg-strip-user{margin-left:auto;color:#2a5a7a;font-size:11px}
+.bg-content{position:absolute;top:44px;left:0;right:0;bottom:0;display:flex}
+.bg-sidebar{width:200px;background:#0a1628;border-right:1px solid #132238;flex-shrink:0}
+.bg-main{flex:1;padding:16px;overflow:hidden}
+.bg-row{height:12px;background:#132238;border-radius:3px;margin-bottom:8px;opacity:.4}
+.bg-row.short{width:60%}.bg-row.med{width:80%}
+.bg-proc-box{background:#0d1e35;border:1px solid #1a3a5a;border-radius:6px;padding:10px 12px;margin-bottom:10px}
+.bg-proc-num{color:#2a5a7a;font:600 10px 'Courier New',monospace;margin-bottom:4px}
+.bg-proc-lines .bg-row{opacity:.25}
+
+.popup-frame{position:relative;z-index:10;border-radius:12px;box-shadow:0 30px 80px rgba(0,0,0,.85),0 0 0 1px rgba(201,148,26,.15),inset 0 1px 0 rgba(255,255,255,.04);overflow:hidden}
+
+:root{
+  --bg:#090e1a;--surface:#0f1724;--surface-2:#162134;--surface-3:#1e2e44;
+  --border:#1e3050;--border-hi:#2e4870;
+  --ink:#e8eef8;--muted:#5a7a9a;--muted-hi:#8a9aba;
+  --gold:#c9941a;--gold-l:#e8b84b;--gold-dim:rgba(201,148,26,.13);--gold-glow:rgba(201,148,26,.35);
+  --mint:#22c55e;--mint-dim:rgba(34,197,94,.10);
+  --amber:#f59e0b;--amber-dim:rgba(245,158,11,.11);
+  --red:#ef4444;--red-dim:rgba(239,68,68,.10);
+  --blue:#3b82f6;--blue-dim:rgba(59,130,246,.10);
+  --purple:#a855f7;--purple-dim:rgba(168,85,247,.10);
+  --teal:#14b8a6;--teal-dim:rgba(20,184,166,.10);
+  --r:8px;--r-sm:5px;--r-xs:3px;
+}
+.popup{width:480px;background:var(--bg);color:var(--ink);font:13px/1.5 'Segoe UI',system-ui,sans-serif;display:flex;flex-direction:column;overflow:hidden;max-height:90vh;position:relative}
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+
+header{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0}
+.hdr-logo{display:flex;align-items:center;gap:10px}
+.seal{width:34px;height:34px;border-radius:50%;background:conic-gradient(from 135deg,#9b6d10,#d4a017,#f0c840,#d4a017,#9b6d10);color:#1a0e00;font:900 italic 18px Georgia,serif;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 0 16px var(--gold-glow),inset 0 1px 0 rgba(255,255,255,.2)}
+.hdr-title{font-size:13.5px;font-weight:700;color:var(--gold-l);letter-spacing:.3px}
+.hdr-sub{font-size:9.5px;color:var(--muted);margin-top:1px;letter-spacing:.2px}
+.hdr-actions{display:flex;align-items:center;gap:8px}
+.conn-pill{font-size:10px;font-weight:600;padding:3px 8px;border-radius:20px;border:1px solid currentColor;letter-spacing:.3px;cursor:default}
+.conn-ok{color:var(--mint);background:var(--mint-dim)}
+.icon-btn{width:30px;height:30px;background:none;border:1px solid var(--border);border-radius:var(--r-sm);color:var(--muted);cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center;transition:all .2s}
+.icon-btn:hover{border-color:var(--gold);color:var(--gold);background:var(--gold-dim)}
+
+#batch-bar{padding:7px 14px 8px;background:var(--gold-dim);border-bottom:1px solid rgba(201,148,26,.2);flex-shrink:0;display:none}
+.batch-label{display:flex;justify-content:space-between;font:600 11px inherit;color:var(--gold-l);margin-bottom:4px}
+.batch-progress-bg{height:3px;background:var(--border);border-radius:2px;overflow:hidden}
+.batch-progress-fill{height:100%;background:linear-gradient(90deg,var(--gold),var(--gold-l));border-radius:2px;width:0%;transition:width .5s}
+.batch-current{font:10px 'Courier New',monospace;color:var(--muted-hi);margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+.nav-tabs{display:flex;background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0}
+.ntab{flex:1;display:flex;align-items:center;justify-content:center;padding:9px 4px;cursor:pointer;font:600 11px inherit;color:var(--muted);border-bottom:2px solid transparent;transition:all .2s;user-select:none;white-space:nowrap}
+.ntab:hover{color:var(--ink)}
+.ntab.active{color:var(--gold-l);border-bottom-color:var(--gold)}
+
+.tab-pane{overflow-y:auto;display:none;max-height:calc(90vh - 145px)}
+.tab-pane.active{display:block}
+
+footer{display:flex;justify-content:space-between;align-items:center;padding:5px 14px;background:var(--surface);border-top:1px solid var(--border);font-size:10px;color:var(--muted);flex-shrink:0}
+.audit-badge{background:var(--purple-dim);color:var(--purple);border:1px solid rgba(168,85,247,.3);border-radius:10px;padding:1px 7px;font:600 10px inherit}
+
+.overlay{position:absolute;inset:0;background:var(--bg);z-index:100;display:none;flex-direction:column;overflow:hidden}
+
+.proc-input-wrap{padding:10px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;gap:6px;align-items:center}
+.proc-input{flex:1;background:var(--surface-2);border:1px solid var(--border);border-radius:var(--r-sm);padding:6px 10px;color:var(--ink);font:11.5px 'Courier New',monospace;outline:none;transition:border-color .2s}
+.proc-input:focus{border-color:var(--gold)}
+.proc-input::placeholder{color:var(--muted);font-family:'Segoe UI',sans-serif}
+.btn-detectar{padding:6px 11px;border-radius:var(--r-sm);border:1px solid var(--border);background:var(--surface-3);color:var(--muted-hi);cursor:pointer;font:600 11px inherit;flex-shrink:0;transition:all .2s}
+.btn-detectar:hover{border-color:var(--gold);color:var(--gold);background:var(--gold-dim)}
+
+.proc-card{margin:10px;border-radius:var(--r);background:var(--surface);border:1px solid var(--border);overflow:hidden}
+.proc-card-header{padding:10px 12px;display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
+.proc-num{font:700 12.5px 'Courier New',monospace;color:var(--gold-l);letter-spacing:.3px}
+.proc-reu{font-size:12px;color:var(--ink);font-weight:600;margin-top:2px}
+.proc-tipo{font:700 9px inherit;padding:2px 7px;border-radius:10px;flex-shrink:0;letter-spacing:.5px;text-transform:uppercase;margin-top:2px}
+.tipo-conciliacao{background:var(--blue-dim);color:var(--blue);border:1px solid rgba(59,130,246,.3)}
+.tipo-mediacao{background:var(--teal-dim);color:var(--teal);border:1px solid rgba(20,184,166,.3)}
+.proc-card-body{padding:0 12px 10px}
+.proc-meta-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.proc-tel{font:11px 'Courier New',monospace;color:var(--muted-hi)}
+.urg-chip{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:10px;font:700 10.5px inherit;flex-shrink:0}
+.urg-red{background:rgba(239,68,68,.15);color:#fca5a5;border:1px solid rgba(239,68,68,.4)}
+.urg-amber{background:rgba(245,158,11,.13);color:#fcd34d;border:1px solid rgba(245,158,11,.35)}
+.urg-green{background:rgba(34,197,94,.11);color:#86efac;border:1px solid rgba(34,197,94,.3)}
+
+.stepper-wrap{padding:0 10px 10px}
+.stepper-title{font:700 9.5px inherit;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);padding:8px 2px 6px;display:flex;align-items:center;gap:6px}
+.stepper-title::after{content:'';flex:1;height:1px;background:var(--border)}
+.step{border-radius:var(--r);border:1px solid var(--border);margin-bottom:7px;overflow:hidden;background:var(--surface);transition:all .2s}
+.step:last-child{margin-bottom:0}
+.step-pending{opacity:.6}
+.step-active{border-color:var(--gold);box-shadow:0 0 0 1px var(--gold-dim)}
+.step-done{border-color:rgba(34,197,94,.3)}
+.step-urgent{border-color:var(--red);box-shadow:0 0 0 1px var(--red-dim)}
+.step-header{display:flex;align-items:center;gap:10px;padding:10px 12px}
+.step-active .step-header,.step-urgent .step-header{cursor:pointer}
+.step-ind{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;flex-shrink:0;transition:all .25s}
+.ind-pending{background:var(--surface-2);color:var(--muted);border:1px solid var(--border)}
+.ind-active{background:linear-gradient(135deg,#1d4ed8,#1e3a8a);color:#fff;border:1px solid #2563eb;box-shadow:0 0 10px rgba(37,99,235,.4)}
+.ind-done{background:#14532d;color:#4ade80;border:1px solid #166534;font-size:13px}
+.ind-urgent{background:#7f1d1d;color:#fca5a5;border:1px solid #991b1b;animation:pulse-dot 1.4s ease-in-out infinite}
+@keyframes pulse-dot{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.7)}}
+.step-info{flex:1;min-width:0}
+.step-nome{font:700 12px inherit;color:var(--ink);line-height:1.3}
+.step-art{font:400 10px inherit;color:var(--muted);margin-top:1px}
+.step-badge{font:700 9.5px inherit;padding:2px 8px;border-radius:10px;flex-shrink:0}
+.badge-active{background:var(--gold-dim);color:var(--gold-l);border:1px solid rgba(201,148,26,.3)}
+.badge-done{background:var(--mint-dim);color:var(--mint);border:1px solid rgba(34,197,94,.3)}
+.badge-urgent{background:var(--red-dim);color:var(--red);border:1px solid rgba(239,68,68,.35)}
+.badge-pending{background:var(--surface-2);color:var(--muted);border:1px solid var(--border)}
+.step-body{padding:0 12px 12px;border-top:1px solid var(--border);background:rgba(255,255,255,.012)}
+.step-msg-preview{background:var(--surface-2);border:1px solid var(--border);border-radius:var(--r-sm);padding:8px 10px;font:11px/1.6 'Courier New',monospace;color:var(--ink);margin:10px 0 8px;max-height:80px;overflow-y:auto;white-space:pre-wrap}
+.step-actions{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.step-actions-row{display:flex;gap:6px;width:100%;margin-top:6px}
+.btn-step{padding:7px 12px;border-radius:var(--r-sm);cursor:pointer;font:600 11.5px inherit;display:flex;align-items:center;gap:5px;transition:all .2s;white-space:nowrap;flex-shrink:0}
+.btn-ok{background:var(--mint-dim);border:1px solid rgba(34,197,94,.4);color:var(--mint)}
+.btn-ok:hover{background:rgba(34,197,94,.18)}
+.btn-err{background:var(--red-dim);border:1px solid rgba(239,68,68,.4);color:var(--red)}
+.btn-err:hover{background:rgba(239,68,68,.18)}
+.btn-pri{background:linear-gradient(135deg,#1d4ed8,#1e3a8a);border:0;color:#fff;box-shadow:0 2px 8px rgba(29,78,216,.3)}
+.btn-pri:hover{filter:brightness(1.1)}
+.btn-sec{background:var(--surface-2);border:1px solid var(--border);color:var(--muted-hi)}
+.btn-sec:hover{border-color:var(--border-hi);color:var(--ink)}
+.btn-gold{background:var(--gold-dim);border:1px solid rgba(201,148,26,.4);color:var(--gold-l)}
+.btn-gold:hover{background:rgba(201,148,26,.22)}
+.btn-purple{background:var(--purple-dim);border:1px solid rgba(168,85,247,.4);color:var(--purple)}
+.btn-full{flex:1;justify-content:center}
+.step-hint{font-size:10px;color:var(--muted);margin-top:6px;line-height:1.5;padding:6px 8px;background:var(--surface-2);border-radius:var(--r-xs);border-left:2px solid var(--border-hi)}
+.step-hint.hint-warn{border-color:var(--amber);color:#fcd34d}
+.step-hint.hint-danger{border-color:var(--red);color:#fca5a5}
+.step-hint.hint-info{border-color:var(--blue);color:#93c5fd}
+.lote-wrap{margin-top:8px}
+.lote-label{font:600 10.5px inherit;color:var(--amber);margin-bottom:4px;display:flex;justify-content:space-between}
+.lote-ta{width:100%;height:60px;background:var(--surface-2);border:1px solid rgba(245,158,11,.3);border-radius:var(--r-sm);color:var(--ink);font:11px 'Courier New',monospace;padding:6px 8px;resize:none;outline:none}
+.lote-ta:focus{border-color:var(--amber)}
+.lote-ta::placeholder{color:var(--muted)}
+.btn-exec-lote{width:100%;margin-top:8px;cursor:pointer;border:1px solid var(--amber);border-radius:var(--r-sm);padding:8px;background:var(--amber-dim);color:var(--amber);font:700 12px inherit;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:6px}
+.btn-exec-lote:hover{background:rgba(245,158,11,.18)}
+
+.robos-search-wrap{padding:7px 10px;background:var(--surface);border-bottom:1px solid var(--border)}
+.robos-search{width:100%;background:var(--surface-2);border:1px solid var(--border);border-radius:var(--r);padding:6px 10px;color:var(--ink);font:12px inherit;outline:none}
+.robos-search::placeholder{color:var(--muted)}
+.robos-search:focus{border-color:var(--gold)}
+.robos-grupos{display:flex;overflow-x:auto;background:var(--surface);border-bottom:1px solid var(--border);scrollbar-width:none}
+.robos-grupos::-webkit-scrollbar{display:none}
+.rgrup{flex-shrink:0;display:flex;align-items:center;gap:4px;padding:8px 11px;cursor:pointer;font:600 10.5px inherit;color:var(--muted);border-bottom:2px solid transparent;white-space:nowrap;transition:all .2s;user-select:none}
+.rgrup:hover{color:var(--ink)}
+.rgrup.ativo{color:var(--gold-l);border-bottom-color:var(--gold)}
+.rgrup .badge{font:400 9px inherit;background:var(--surface-2);color:var(--muted);border-radius:10px;padding:1px 5px}
+.rgrup.ativo .badge{background:var(--gold-dim);color:var(--gold-l)}
+.robos-lista{padding:8px}
+.robo-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);margin-bottom:6px;overflow:hidden;transition:border-color .2s}
+.robo-card:hover{border-color:var(--border-hi)}
+.robo-card:last-child{margin-bottom:0}
+.robo-head{padding:9px 11px}
+.robo-row1{display:flex;align-items:center;justify-content:space-between;gap:6px}
+.robo-icon{font-size:14px;flex-shrink:0}
+.robo-nome{font:700 12px inherit;color:var(--ink);flex:1;line-height:1.3}
+.robo-desc{font-size:10.5px;color:var(--muted-hi);margin-top:3px;line-height:1.4}
+.robo-actions{display:flex;align-items:center;gap:6px;margin-top:8px}
+.btn-robo-play{flex:1;cursor:pointer;border:0;border-radius:var(--r-sm);padding:7px;background:linear-gradient(135deg,#166534,#14532d);color:#fff;font:700 11.5px inherit;display:flex;align-items:center;justify-content:center;gap:4px;transition:filter .2s}
+.btn-robo-play:hover{filter:brightness(1.12)}
+.btn-robo-lote{cursor:pointer;border:1px solid var(--border);border-radius:var(--r-sm);padding:7px 9px;background:transparent;color:var(--muted);font:600 11px inherit;display:flex;align-items:center;gap:4px;white-space:nowrap;transition:all .2s;flex-shrink:0}
+.btn-robo-lote:hover,.btn-robo-lote.on{border-color:var(--amber);color:var(--amber);background:var(--amber-dim)}
+
+.audit-header{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:var(--surface);border-bottom:1px solid var(--border)}
+.audit-titulo{font:700 12px inherit;color:var(--purple)}
+.audit-actions{display:flex;gap:6px}
+.btn-sm{padding:4px 10px;border-radius:var(--r-sm);border:1px solid var(--border);background:var(--surface-2);color:var(--muted-hi);cursor:pointer;font:600 11px inherit}
+.btn-export{border-color:var(--blue);color:var(--blue)}
+.btn-danger{border-color:var(--red);color:var(--red)}
+.audit-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--border);border-bottom:1px solid var(--border)}
+.stat-cell{background:var(--surface);padding:10px 8px;text-align:center}
+.stat-val{font-size:21px;font-weight:800;line-height:1;letter-spacing:-1px}
+.stat-lbl{font:600 9px inherit;color:var(--muted);margin-top:3px;text-transform:uppercase;letter-spacing:.5px}
+.s-total .stat-val{color:var(--gold-l)}
+.s-ok .stat-val{color:var(--mint)}
+.s-err .stat-val{color:var(--red)}
+.s-dur .stat-val{color:var(--blue);font-size:16px}
+.audit-lista{flex:1;overflow-y:auto;padding:6px 10px}
+.audit-empty{color:var(--muted);text-align:center;padding:40px 0;font-size:12px;line-height:1.7}
+.audit-item{display:flex;align-items:center;gap:8px;padding:7px 2px;border-bottom:1px solid var(--border)}
+.audit-item:last-child{border-bottom:none}
+.a-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.a-ok .a-dot{background:var(--mint)}
+.a-fail .a-dot{background:var(--red)}
+.a-info{flex:1;min-width:0}
+.a-nome{font:600 11.5px inherit;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.a-num{font:10px 'Courier New',monospace;color:var(--muted-hi);margin-top:1px}
+.a-meta{text-align:right;flex-shrink:0}
+.a-ts{font-size:10px;color:var(--muted)}
+.a-dur{font-size:10px;color:var(--blue)}
+
+.proto-wrap{padding:10px}
+.proto-section{margin-bottom:12px}
+.proto-section-title{font:700 9.5px inherit;text-transform:uppercase;letter-spacing:.7px;color:var(--muted);padding:6px 2px;display:flex;align-items:center;gap:6px}
+.proto-section-title::after{content:'';flex:1;height:1px;background:var(--border)}
+.proto-rule{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-sm);padding:9px 12px;margin-bottom:6px}
+.proto-rule-title{font:700 11.5px inherit;color:var(--ink);margin-bottom:4px;display:flex;align-items:center;gap:6px}
+.proto-rule-body{font-size:11px;color:var(--muted-hi);line-height:1.6}
+.proto-rule.danger{border-color:rgba(239,68,68,.35);background:rgba(239,68,68,.04)}
+.proto-rule.danger .proto-rule-title{color:var(--red)}
+.proto-rule.warn{border-color:rgba(245,158,11,.35);background:rgba(245,158,11,.03)}
+.proto-rule.warn .proto-rule-title{color:var(--amber)}
+.proto-rule.info{border-color:rgba(59,130,246,.3);background:rgba(59,130,246,.03)}
+.proto-rule.info .proto-rule-title{color:var(--blue)}
+
+.overlay-header{display:flex;align-items:center;justify-content:space-between;padding:11px 14px;background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0}
+.overlay-titulo{font:700 13px inherit;color:var(--purple)}
+.overlay-body{flex:1;overflow-y:auto;padding:10px 14px}
+.cert-textarea{width:100%;min-height:210px;background:var(--surface-2);border:1px solid var(--border);border-radius:var(--r-sm);color:var(--ink);font:11.5px/1.6 'Courier New',monospace;padding:10px 12px;resize:vertical;outline:none}
+.overlay-footer{padding:10px 14px;background:var(--surface);border-top:1px solid var(--border);display:flex;gap:8px;flex-shrink:0}
+.btn-copy{flex:1;padding:9px;border:0;border-radius:var(--r-sm);background:linear-gradient(135deg,#6d28d9,#4c1d95);color:#fff;font:700 12px inherit;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;transition:filter .2s}
+.btn-copy:hover{filter:brightness(1.1)}
+.wa-tipos{display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap}
+.btn-wa-tipo{padding:5px 9px;border:1px solid var(--border);border-radius:var(--r-sm);background:var(--surface-2);color:var(--muted-hi);cursor:pointer;font:600 10.5px inherit;transition:all .2s}
+.btn-wa-tipo:hover,.btn-wa-tipo.ativo{border-color:var(--mint);color:var(--mint);background:var(--mint-dim)}
+.wa-preview{background:var(--surface-2);border:1px solid var(--border);border-radius:var(--r);padding:12px;font:11.5px/1.7 'Segoe UI',sans-serif;color:var(--ink);white-space:pre-wrap;word-break:break-word;margin-bottom:10px;max-height:180px;overflow-y:auto}
+.btn-wa-open{flex:1;padding:9px;border:0;border-radius:var(--r-sm);background:linear-gradient(135deg,#15803d,#166534);color:#fff;font:700 12px inherit;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;transition:filter .2s}
+.btn-wa-open:hover{filter:brightness(1.1)}
+.busca-grupo-label{font:600 10px;color:#5a7a9a;text-transform:uppercase;letter-spacing:.6px;padding:7px 2px 4px}
+.toast{position:fixed;bottom:50px;left:50%;transform:translateX(-50%);background:var(--surface);border:1px solid var(--mint);color:var(--mint);padding:7px 18px;border-radius:20px;font:600 12px 'Segoe UI',sans-serif;white-space:nowrap;z-index:999;box-shadow:0 4px 20px rgba(0,0,0,.5);animation:toast-anim 2.8s forwards;pointer-events:none}
+.toast-err{border-color:var(--red);color:var(--red)}
+.toast-info{border-color:var(--blue);color:var(--blue)}
+.toast-gold{border-color:var(--gold-l);color:var(--gold-l)}
+@keyframes toast-anim{0%{opacity:0;transform:translateX(-50%) translateY(8px)}12%{opacity:1;transform:translateX(-50%) translateY(0)}78%{opacity:1}100%{opacity:0}}
+</style>
+</head>
+<body>
+
+<div class="bg-projudi">
+  <div class="bg-strip">
+    <span class="bg-strip-logo">PROJUDI · TJ-GO — Portal de Processos Judiciais</span>
+    <span class="bg-strip-user">Servidor CEPACE</span>
+  </div>
+  <div class="bg-content">
+    <div class="bg-sidebar"></div>
+    <div class="bg-main">
+      <div class="bg-proc-box">
+        <div class="bg-proc-num">Processo: 0001847-23.2026.8.09.0051</div>
+        <div class="bg-proc-lines">
+          <div class="bg-row short"></div><div class="bg-row med"></div>
+          <div class="bg-row"></div><div class="bg-row short"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="outer-label">Expeditor Nexus CEPACE v1.0 · Preview Interativo · PROJUDI TJ-GO</div>
+
+<div class="popup-frame">
+<div class="popup" id="popup">
+
+  <header>
+    <div class="hdr-logo">
+      <div class="seal">Σ</div>
+      <div>
+        <div class="hdr-title">Expeditor Nexus</div>
+        <div class="hdr-sub">CEPACE · TJ-GO · Citações &amp; Audiências</div>
+      </div>
+    </div>
+    <div class="hdr-actions">
+      <span class="conn-pill conn-ok">● Conectado</span>
+      <button class="icon-btn" onclick="toast('v1.0 · Sumério v0.3 integrado · 49 robôs','info')">ℹ</button>
+    </div>
+  </header>
+
+  <div id="batch-bar">
+    <div class="batch-label"><span>⚡ Expedindo fila</span><span id="bc">0/0</span></div>
+    <div class="batch-progress-bg"><div id="bpf" class="batch-progress-fill"></div></div>
+    <div id="bcur" class="batch-current">—</div>
+  </div>
+
+  <nav class="nav-tabs" id="ntabs">
+    <div class="ntab active" data-tab="expedir">⚡ Expedir</div>
+    <div class="ntab" data-tab="robos">🤖 Robôs</div>
+    <div class="ntab" data-tab="audit">📊 Auditoria</div>
+    <div class="ntab" data-tab="proto">📋 Protocolo</div>
+  </nav>
+
+  <div id="tab-expedir" class="tab-pane active"></div>
+  <div id="tab-robos"   class="tab-pane"></div>
+  <div id="tab-audit"   class="tab-pane"></div>
+  <div id="tab-proto"   class="tab-pane"></div>
+
+  <footer>
+    <span>Expeditor Nexus v1.0 · Sumério v0.3 integrado · 49 robôs</span>
+    <span id="abadge" class="audit-badge" style="display:none"></span>
+  </footer>
+
+  <!-- Overlays -->
+  <div id="wa-overlay" class="overlay"></div>
+  <div id="cert-overlay" class="overlay"></div>
+
+</div>
+</div>
+
+<script>
+// ════════════════════════════════════════════════════════════════════════════
+//  EXPEDITOR NEXUS — PREVIEW INTERATIVO (lógica standalone, sem chrome.* APIs)
+// ════════════════════════════════════════════════════════════════════════════
+'use strict';
+
+// ── PROCESSO DEMO (simula detecção do PROJUDI) ─────────────────────────────
+const PROC_DEMO = {
+  numero: '0001847-23.2026.8.09.0051',
+  reu: 'JOÃO CARLOS DE OLIVEIRA SANTOS',
+  telefone: '(62) 99814-7723',
+  audiencia: addDays(4),       // audiência em 4 dias → urgente (amber)
+  tipo: 'conciliacao',
+  etapa: 'wa_pendente',
+};
+function addDays(n){const d=new Date();d.setDate(d.getDate()+n);return d.toISOString().slice(0,10);}
+function diasAte(iso){if(!iso)return null;return Math.ceil((new Date(iso+'T12:00:00')-new Date())/86400000);}
+
+// ── GRUPOS DE ROBÔS (49 — herança Sumério v0.3) ────────────────────────────
+const GRUPOS=[
+ {id:'citacoes',icon:'⚡',nome:'Citações',robos:[
+   {id:'expedir-citacao-eletronica',nome:'Expedir Citação Eletrônica',icon:'📧',desc:'Via portal — §1º art. 246 CPC'},
+   {id:'expedir-carta-citacao',nome:'Expedir Carta de Citação',icon:'✉️',desc:'Correio com AR — art. 246 I'},
+   {id:'marcar-leitura-intimacao-citacao',nome:'Marcar Leitura Intimação/Citação',icon:'✅',desc:'Registrar ciência formal'},
+   {id:'expedir-intimacao',nome:'Expedir Intimação',icon:'📨',desc:'Intimação de parte ou advogado'},
+   {id:'intimacao-ministerio-publico',nome:'Intimação Ministério Público',icon:'⚖️',desc:'Via PGJ-GO'},
+   {id:'expedir-oficio-serventia',nome:'Expedir Ofício à Serventia',icon:'📮',desc:'Comunicação entre serventias'},
+ ]},
+ {id:'audiencias',icon:'📅',nome:'Audiências',robos:[
+   {id:'criar-agenda-audiencia',nome:'Criar Agenda de Audiência',icon:'📆',desc:'Abrir pauta'},
+   {id:'reservar-agenda-audiencia',nome:'Reservar Agenda',icon:'🔒',desc:'Bloquear horário'},
+   {id:'marcar-audiencia-automaticamente',nome:'Marcar Audiência (Auto)',icon:'🤖',desc:'Data automática'},
+   {id:'marcar-audiencia-manualmente',nome:'Marcar Audiência (Manual)',icon:'✏️',desc:'Inserir data manual'},
+ ]},
+ {id:'precatorias',icon:'📬',nome:'Precatórias',robos:[
+   {id:'expedir-carta-precatoria',nome:'Expedir Carta Precatória',icon:'📬',desc:'Para outra comarca'},
+   {id:'finalizar-carta-precatoria',nome:'Finalizar Carta Precatória',icon:'✔️',desc:'Após retorno'},
+   {id:'verificar-resposta-carta-precatoria',nome:'Verificar Resposta CP',icon:'🔍',desc:'Checar retorno'},
+   {id:'devolucao-processo-carta-precatoria',nome:'Devolução Processo (CP)',icon:'↩️',desc:'Retornar à origem'},
+ ]},
+ {id:'pendencias',icon:'📋',nome:'Pendências',robos:[
+   {id:'acompanhar-pendencias',nome:'Acompanhar Pendências',icon:'📊',desc:'Listar pendências'},
+   {id:'criar-pendencia',nome:'Criar Pendência',icon:'➕',desc:'Nova pendência'},
+   {id:'responder-pendencia',nome:'Responder Pendência',icon:'💬',desc:'Registrar resposta'},
+   {id:'encaminhar-pendencia',nome:'Encaminhar Pendência',icon:'➡️',desc:'Para outro cargo'},
+ ]},
+ {id:'movimentacao',icon:'🔄',nome:'Movimentação',robos:[
+   {id:'mandar-processo-concluso',nome:'Mandar Concluso',icon:'⚖️',desc:'Ao juiz'},
+   {id:'movimentar-processo-lote',nome:'Movimentar em Lote',icon:'🔁',desc:'Vários processos'},
+   {id:'arquivamento',nome:'Arquivamento',icon:'🗄️',desc:'Arquivar processo'},
+   {id:'redistribuir-processo',nome:'Redistribuir Processo',icon:'↔️',desc:'Novo distribuidor'},
+ ]},
+];
+const ROBOS_DB={};
+GRUPOS.forEach(g=>g.robos.forEach(r=>ROBOS_DB[r.id]={...r,grupo:g.id}));
+
+// ── ESTADO ──────────────────────────────────────────────────────────────────
+const S={tab:'expedir',proc:JSON.parse(JSON.stringify(PROC_DEMO)),rgrupo:'citacoes',
+  audit:[],running:null,lote:{fila:[],idx:0,total:0}};
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+
+// ── NAV ──────────────────────────────────────────────────────────────────────
+document.querySelectorAll('.ntab').forEach(t=>{
+  t.onclick=()=>{S.tab=t.dataset.tab;
+    document.querySelectorAll('.ntab').forEach(x=>x.classList.toggle('active',x===t));
+    document.querySelectorAll('.tab-pane').forEach(p=>p.classList.toggle('active',p.id==='tab-'+S.tab));
+    if(S.tab==='audit')renderAudit();
+  };
+});
+
+// ════════════════════════════════════════════════════════════════════════════
+//  TAB EXPEDIR
+// ════════════════════════════════════════════════════════════════════════════
+function renderExpedir(){
+  const p=S.proc;
+  $('#tab-expedir').innerHTML=`
+    <div class="proc-input-wrap">
+      <input class="proc-input" id="pnum" value="${esc(p.numero)}">
+      <button class="btn-detectar" id="bdet">⊕ Detectar</button>
+    </div>
+    ${procCard(p)}
+    ${stepper(p)}
+    <div style="padding:0 10px 10px">
+      <div class="stepper-title">MODO LOTE — Vários processos</div>
+      <div class="lote-wrap">
+        <div class="lote-label"><span>📋 Números de processo</span><span id="lec"></span></div>
+        <textarea class="lote-ta" id="leta" placeholder="0001501-22.2026.8.09.0051&#10;0001502-44.2026.8.09.0051&#10;0001503-66.2026.8.09.0051"></textarea>
+        <div class="lote-hint">Um número por linha · Robô: Expedir Citação Eletrônica</div>
+        <button class="btn-exec-lote" id="blote">⚡ Expedir Lote</button>
+      </div>
+    </div>`;
+  bindExpedir();
+}
+
+function procCard(p){
+  const u=diasAte(p.audiencia);
+  const uc=u===null?'urg-amber':u<=2?'urg-red':u<=6?'urg-amber':'urg-green';
+  const ul=u===null?'—':u<0?'⚠ ATRASADA':u===0?'⚠ HOJE':u===1?'⚠ Amanhã':`⏱ ${u} dias`;
+  const af=p.audiencia?new Date(p.audiencia+'T12:00:00').toLocaleDateString('pt-BR',{weekday:'short',day:'2-digit',month:'2-digit'}):'—';
+  const tc=p.tipo==='mediacao'?'tipo-mediacao':'tipo-conciliacao';
+  const tl=p.tipo==='mediacao'?'⚡ MEDIAÇÃO':'⚖ CONCILIAÇÃO';
+  return `<div class="proc-card">
+    <div class="proc-card-header">
+      <div><div class="proc-num">${esc(p.numero)}</div><div class="proc-reu">${esc(p.reu)}</div></div>
+      <div class="proc-tipo ${tc}">${tl}</div>
+    </div>
+    <div class="proc-card-body"><div class="proc-meta-row">
+      ${p.telefone?`<span class="proc-tel">📱 ${esc(p.telefone)}</span>`:''}
+      ${p.audiencia?`<span class="urg-chip ${uc}">📅 ${af} · ${ul}</span>`:''}
+    </div></div></div>`;
+}
+
+function stepper(p){
+  const e=p.etapa,u=diasAte(p.audiencia);
+  const urgent=u!==null&&u<=6&&e!=='concluido';
+  const sWA=e==='wa_pendente'?'active':(e==='concluido')?'done':'donefail';
+  const sEXP=e==='wa_frustrada'?'active':e==='expedido'?'done':(e==='wa_pendente'||e==='concluido')?'pending':'done';
+  const sURG=urgent&&(e==='wa_frustrada'||e==='expedido')?'urgent':e==='intimado'?'done':'pending';
+  const sCERT=e==='concluido'?'active':'pending';
+  return `<div class="stepper-wrap">
+    <div class="stepper-title">PROTOCOLO DE CITAÇÃO · Art. 246 CPC</div>
+    ${stepWA(p,sWA)}${stepEXP(p,sEXP)}${stepURG(p,sURG,u)}${stepCERT(p,sCERT)}
+  </div>`;
+}
+function scl(st){return st==='active'?'step-active':st==='done'?'step-done':st==='donefail'?'step-done':st==='urgent'?'step-urgent':'step-pending';}
+function icl(st){return st==='active'?'ind-active':st==='done'?'ind-done':st==='urgent'?'ind-urgent':'ind-pending';}
+function bdg(st){const c=st==='active'?'badge-active':st==='done'?'badge-done':st==='urgent'?'badge-urgent':'badge-pending';
+  const l=st==='done'?'✓ Concluída':st==='active'?'● Ativa':st==='urgent'?'⚠ Urgente':st==='donefail'?'✗ Frustrada':'○ Aguardando';
+  return `<div class="step-badge ${c}">${l}</div>`;}
+
+function stepWA(p,st){
+  const msg=waMsg(p,p.tipo);
+  const body=st==='active'?`<div class="step-body">
+    <div class="step-msg-preview">${esc(msg.slice(0,200))}…</div>
+    <div class="step-actions"><button class="btn-step btn-robo-play btn-full" id="bwaver" style="background:linear-gradient(135deg,#15803d,#166534)">📱 Ver Mensagem Completa</button></div>
+    <div class="step-actions-row">
+      <button class="btn-step btn-ok btn-full" id="bwaok">✓ Citação Efetivada</button>
+      <button class="btn-step btn-err" id="bwafrs">✗ Frustrada</button>
+    </div>
+    <div class="step-hint hint-info">💡 Art. 246 §1º CPC — WhatsApp é a modalidade prioritária. Carta e WA podem ser expedidos simultaneamente.</div>
+  </div>`:'';
+  const it=st==='done'?'✓':st==='donefail'?'✗':'1';
+  const ic=st==='donefail'?'ind-done':icl(st);
+  return `<div class="step ${scl(st)}"><div class="step-header">
+    <div class="step-ind ${ic}">${it}</div>
+    <div class="step-info"><div class="step-nome">📱 Citação WhatsApp</div>
+    <div class="step-art">Art. 246 §1º CPC · Modalidade prioritária</div></div>${bdg(st)}
+  </div>${body}</div>`;
+}
+function stepEXP(p,st){
+  const body=st==='active'?`<div class="step-body">
+    <div class="step-hint hint-warn" style="margin-top:10px">⚠ WA não efetivado. Expedir ato processual conforme decisão judicial.</div>
+    <div class="step-actions-row"><button class="btn-step btn-pri btn-full" id="bcelet">✉ Citar Eletrônico</button>
+      <button class="btn-step btn-sec" id="bmand">⚖ Mandado</button></div>
+    <div class="step-actions-row"><button class="btn-step btn-sec btn-full" id="bprec">📬 Carta Precatória</button>
+      <button class="btn-step btn-ok" id="bexpok">✓ Já Expedido</button></div>
+    <div class="step-hint hint-info" style="margin-top:6px">📌 Leia a decisão judicial para verificar qual modalidade foi determinada.</div>
+  </div>`:'';
+  return `<div class="step ${scl(st)}"><div class="step-header">
+    <div class="step-ind ${icl(st)}">${st==='done'?'✓':'2'}</div>
+    <div class="step-info"><div class="step-nome">✉ Expedição de Ato Processual</div>
+    <div class="step-art">Art. 246 I/II/III CPC · Carta, Mandado ou Eletrônica</div></div>${bdg(st)}
+  </div>${body}</div>`;
+}
+function stepURG(p,st,u){
+  const dt=u!==null?`${u} dia${u!==1?'s':''}`:'—';
+  const body=(st==='urgent')?`<div class="step-body">
+    <div class="step-hint hint-danger" style="margin-top:10px">⚠ Audiência em <strong>${dt}</strong> sem citação confirmada.<br>Intimar a parte autora com prazo de 24 horas para novos dados.</div>
+    <div class="step-actions-row"><button class="btn-step btn-gold btn-full" id="bintim">📋 Intimar 24h — Novos Dados</button></div>
+    <div class="step-actions-row"><button class="btn-step btn-err" id="bcanc">✗ Cancelar Audiência</button>
+      <button class="btn-step btn-sec btn-full" id="breag">📅 Reagendar</button></div>
+    <div class="step-hint" style="margin-top:6px">🚫 Carta precatória expedida? Nunca cancelar — manter em pauta.</div>
+  </div>`:'';
+  return `<div class="step ${scl(st)}"><div class="step-header">
+    <div class="step-ind ${icl(st)}">${st==='done'?'✓':'⏰'}</div>
+    <div class="step-info"><div class="step-nome">⏰ Audiência Próxima — Urgência</div>
+    <div class="step-art">CEPACE · Intimação 24h · Prazo crítico</div></div>${bdg(st)}
+  </div>${body}</div>`;
+}
+function stepCERT(p,st){
+  const body=st==='active'?`<div class="step-body">
+    <div class="step-hint hint-info" style="margin-top:10px">Selecione a certidão para copiar e colar no PROJUDI.</div>
+    <div class="step-actions"><button class="btn-step btn-ok btn-full" id="bcv">📋 Citação Válida (WA)</button>
+      <button class="btn-step btn-err btn-full" id="bcf">📋 Citação Frustrada</button></div>
+    <div class="step-actions"><button class="btn-step btn-gold btn-full" id="bcn">📋 Novos Dados (24h)</button>
+      <button class="btn-step btn-purple btn-full" id="bca">📋 Aud. Não Realizada</button></div>
+  </div>`:'';
+  return `<div class="step ${scl(st)}"><div class="step-header">
+    <div class="step-ind ${icl(st)}">${st==='done'?'✓':'📋'}</div>
+    <div class="step-info"><div class="step-nome">📋 Certidão Cartorária</div>
+    <div class="step-art">Certificação do ato — PROJUDI</div></div>${bdg(st)}
+  </div>${body}</div>`;
+}
+
+function bindExpedir(){
+  const p=S.proc;
+  $('#bdet').onclick=()=>{S.proc=JSON.parse(JSON.stringify(PROC_DEMO));renderExpedir();toast('Processo detectado: '+S.proc.numero);};
+  $('#bwaver')&&($('#bwaver').onclick=()=>openWA(p));
+  $('#bwaok')&&($('#bwaok').onclick=()=>{S.proc.etapa='concluido';renderExpedir();toast('✓ Citação efetivada! Gere a certidão.');});
+  $('#bwafrs')&&($('#bwafrs').onclick=()=>{S.proc.etapa='wa_frustrada';renderExpedir();toast('WA frustrado. Avançar para expedição.','info');});
+  $('#bcelet')&&($('#bcelet').onclick=()=>runRobo('expedir-citacao-eletronica',()=>{S.proc.etapa='expedido';}));
+  $('#bmand')&&($('#bmand').onclick=()=>runRobo('expedir-carta-citacao',()=>{S.proc.etapa='expedido';}));
+  $('#bprec')&&($('#bprec').onclick=()=>runRobo('expedir-carta-precatoria',()=>{S.proc.etapa='expedido';}));
+  $('#bexpok')&&($('#bexpok').onclick=()=>{S.proc.etapa='expedido';renderExpedir();toast('Ato expedido. Aguardando retorno.','info');});
+  $('#bintim')&&($('#bintim').onclick=()=>runRobo('expedir-intimacao',()=>{S.proc.etapa='intimado';}));
+  $('#bcanc')&&($('#bcanc').onclick=()=>toast('⚠ Só cancelar após esgotado o prazo de 24h sem resposta.','err'));
+  $('#breag')&&($('#breag').onclick=()=>runRobo('marcar-audiencia-manualmente',()=>{}));
+  $('#bcv')&&($('#bcv').onclick=()=>openCert('wa_valida',p));
+  $('#bcf')&&($('#bcf').onclick=()=>openCert('wa_frustrada',p));
+  $('#bcn')&&($('#bcn').onclick=()=>openCert('novos_dados',p));
+  $('#bca')&&($('#bca').onclick=()=>openCert('aud_nao_realiz',p));
+  $('#leta').oninput=()=>{const n=parseN($('#leta').value).length;$('#lec').textContent=n?`(${n})`:'';};
+  $('#blote').onclick=()=>startLote();
+}
+
+// ── ROBÔ RODANDO (simulação visual) ──────────────────────────────────────────
+function runRobo(roboId,onDone){
+  const r=ROBOS_DB[roboId];if(!r)return;
+  showRunBar(r);
+  const steps=stepsFor(roboId);
+  let i=0;const t0=Date.now();
+  const tick=()=>{
+    if(i<steps.length){updateRunBar(r,steps[i]);i++;setTimeout(tick,steps[i-1].ms||750);}
+    else{hideRunBar();const dur=Math.round((Date.now()-t0)/1000);
+      S.audit.unshift({ts:new Date().toISOString(),roboNome:r.nome,numero:S.proc.numero,ok:true,dur});
+      updateBadge();onDone&&onDone();renderExpedir();toast(`✅ ${r.nome} — concluído (${dur}s)`,'gold');}
+  };
+  setTimeout(tick,400);
+}
+function stepsFor(id){
+  const M={
+    'expedir-citacao-eletronica':[
+      {s:'Abrindo aba de movimentação…',ms:700},
+      {s:'Selecionando "Citação Eletrônica"…',ms:850},
+      {s:'Preenchendo dados da parte ré…',ms:900},
+      {s:'Validando prazo legal (Art. 246)…',ms:700},
+      {s:'Confirmando expedição…',ms:800},
+    ],
+    'expedir-carta-citacao':[
+      {s:'Abrindo expedição de carta…',ms:700},
+      {s:'Gerando AR dos Correios…',ms:900},
+      {s:'Anexando peças obrigatórias…',ms:800},
+      {s:'Confirmando expedição…',ms:750},
+    ],
+    'expedir-carta-precatoria':[
+      {s:'Identificando comarca destino…',ms:800},
+      {s:'Montando carta precatória…',ms:900},
+      {s:'Encaminhando para juízo deprecado…',ms:850},
+    ],
+    'expedir-intimacao':[
+      {s:'Abrindo intimação de parte…',ms:700},
+      {s:'Definindo prazo de 24 horas…',ms:800},
+      {s:'Confirmando intimação…',ms:750},
+    ],
+    'marcar-audiencia-manualmente':[
+      {s:'Abrindo agenda de audiências…',ms:700},
+      {s:'Localizando próxima data livre…',ms:850},
+      {s:'Reservando horário na pauta…',ms:800},
+    ],
+  };
+  return M[id]||[{s:'Executando…',ms:800},{s:'Confirmando…',ms:800}];
+}
+
+// RUN BAR injetada dinamicamente (entre nav e tab-pane)
+let runBarEl=null;
+function showRunBar(r){
+  if(runBarEl)runBarEl.remove();
+  runBarEl=document.createElement('div');
+  runBarEl.id='dyn-run-bar';
+  runBarEl.style.cssText='display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 14px;background:rgba(34,197,94,.10);border-bottom:1px solid rgba(34,197,94,.25);flex-shrink:0';
+  runBarEl.innerHTML=`<div style="display:flex;align-items:center;gap:8px;min-width:0">
+      <span style="width:9px;height:9px;border-radius:50%;background:#22c55e;flex-shrink:0;animation:pulse-dot 1.2s ease-in-out infinite"></span>
+      <span style="font:700 12px 'Segoe UI';color:#22c55e;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(r.icon)} ${esc(r.nome)}</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
+      <span id="rbstat" style="font:11px 'Courier New';color:#8a9aba;white-space:nowrap">iniciando…</span>
+    </div>`;
+  $('#ntabs').insertAdjacentElement('afterend',runBarEl);
+  // highlight do robo card na aba robos
+}
+function updateRunBar(r,step){
+  const st=$('#rbstat');if(st)st.textContent=step.s;
+}
+function hideRunBar(){if(runBarEl){runBarEl.remove();runBarEl=null;}}
+
+// ── LOTE ──────────────────────────────────────────────────────────────────────
+function startLote(){
+  const nums=parseN($('#leta').value);
+  if(!nums.length){toast('Informe ao menos um número.','err');return;}
+  S.lote={fila:nums.map(n=>({roboId:'expedir-citacao-eletronica',numero:n})),idx:0,total:nums.length};
+  $('#batch-bar').style.display='block';
+  nextLote();
+}
+function nextLote(){
+  const L=S.lote;
+  if(L.idx>=L.total){
+    $('#batch-bar').style.display='none';
+    toast(`✅ Lote concluído — ${L.total} processo${L.total>1?'s':''}`,'gold');
+    return;
+  }
+  const item=L.fila[L.idx];const r=ROBOS_DB[item.roboId];
+  $('#bc').textContent=`${L.idx}/${L.total}`;
+  $('#bpf').style.width=(L.idx/L.total*100).toFixed(1)+'%';
+  $('#bcur').textContent='Expedindo: '+item.numero;
+  const t0=Date.now();
+  setTimeout(()=>{
+    const dur=Math.round((Date.now()-t0)/1000)||1;
+    S.audit.unshift({ts:new Date().toISOString(),roboNome:r.nome,numero:item.numero,ok:Math.random()>0.12,dur});
+    updateBadge();L.idx++;nextLote();
+  },900+Math.random()*500);
+}
+
+// ── WA OVERLAY ────────────────────────────────────────────────────────────────
+function openWA(p){
+  const ov=$('#wa-overlay');
+  ov.innerHTML=`<div class="overlay-header">
+    <span class="overlay-titulo">📱 Mensagem WhatsApp</span>
+    <button class="btn-sm" id="waclose">✕</button></div>
+  <div class="overlay-body">
+    <div class="wa-tipos">
+      <button class="btn-wa-tipo ativo" data-t="conciliacao">⚖ Conciliação</button>
+      <button class="btn-wa-tipo" data-t="mediacao">👨‍👩‍👧 Mediação</button>
+      <button class="btn-wa-tipo" data-t="lembrete">🔔 Lembrete</button>
+      <button class="btn-wa-tipo" data-t="reagendamento">📅 Reagend.</button>
+    </div>
+    <div class="wa-preview" id="wapv">${esc(waMsg(p,'conciliacao'))}</div>
+  </div>
+  <div class="overlay-footer">
+    <button class="btn-copy" id="wacopy">📋 Copiar Mensagem</button>
+    <button class="btn-wa-open" id="waopen">📲 Abrir WA Web</button>
+  </div>`;
+  ov.style.display='flex';
+  ov.querySelectorAll('.btn-wa-tipo').forEach(b=>b.onclick=()=>{
+    ov.querySelectorAll('.btn-wa-tipo').forEach(x=>x.classList.toggle('ativo',x===b));
+    $('#wapv').textContent=waMsg(p,b.dataset.t);
+  });
+  $('#waclose').onclick=()=>ov.style.display='none';
+  $('#wacopy').onclick=()=>{copyTxt($('#wapv').textContent);toast('Mensagem copiada!');};
+  $('#waopen').onclick=()=>{const tel=(p.telefone||'').replace(/\D/g,'');const num=tel.startsWith('55')?tel:'55'+tel;
+    window.open(`https://wa.me/${num}?text=${encodeURIComponent($('#wapv').textContent)}`,'_blank');};
+}
+
+// ── CERT OVERLAY ──────────────────────────────────────────────────────────────
+function openCert(tipo,p){
+  const map={wa_valida:['Certidão de Citação Válida (WhatsApp)','#22c55e'],
+    wa_frustrada:['Certidão de Citação Frustrada (WhatsApp)','#ef4444'],
+    novos_dados:['Certidão de Intimação — Novos Dados (24h)','#f59e0b'],
+    aud_nao_realiz:['Certidão de Audiência NÃO Realizada','#ef4444']};
+  const [tit,col]=map[tipo]||['Certidão','#a855f7'];
+  const ov=$('#cert-overlay');
+  ov.innerHTML=`<div class="overlay-header">
+    <span class="overlay-titulo" style="color:${col}">${esc(tit)}</span>
+    <button class="btn-sm" id="ccl">✕</button></div>
+  <div class="overlay-body">
+    <textarea class="cert-textarea" id="ctxt">${esc(certTxt(tipo,p))}</textarea>
+    <div class="step-hint hint-info" style="margin-top:8px">✏️ Edite se necessário antes de copiar. Cole no campo de movimentação do PROJUDI.</div>
+  </div>
+  <div class="overlay-footer">
+    <button class="btn-copy" id="ccopy">📋 Copiar Certidão</button>
+    <button class="btn-sm" id="ccl2">Fechar</button>
+  </div>`;
+  ov.style.display='flex';
+  $('#ccl').onclick=$('#ccl2').onclick=()=>ov.style.display='none';
+  $('#ccopy').onclick=()=>{copyTxt($('#ctxt').value);toast('📋 Certidão copiada! Cole no PROJUDI.','gold');};
+}
+
+// ── MENSAGENS WA ──────────────────────────────────────────────────────────────
+function waMsg(p,tipo){
+  tipo=tipo||'conciliacao';
+  const num=p.numero,serv='CEPACE — TJ-GO';
+  const af=p.audiencia?new Date(p.audiencia+'T12:00:00').toLocaleDateString('pt-BR',{weekday:'long',day:'2-digit',month:'2-digit',year:'numeric'}):'[DATA A DEFINIR]';
+  if(tipo==='lembrete')return[`🔔 *LEMBRETE — AUDIÊNCIA DE CONCILIAÇÃO*`,`_${serv}_`,'',`Sua audiência está marcada para *${af}*.`,'','📌 *Apresente-se 5 minutos antes.*','⚠️ Ausência injustificada implica consequências legais.','',`_*Processo:* \`${num}\`_`].join('\n');
+  if(tipo==='reagendamento')return[`📅 *REAGENDAMENTO DE AUDIÊNCIA*`,`_Processo: ${num}_`,'','A audiência designada foi *reagendada*.','A nova data será comunicada pelo PROJUDI.','Confirme respondendo *CIENTE*.','','_CEPACE — TJ-GO_'].join('\n');
+  if(tipo==='mediacao')return[`👨‍👩‍👧 *CITAÇÃO ELETRÔNICA — MEDIAÇÃO FAMILIAR*`,`_${serv}_`,'','Prezado(a), V.Sa. está sendo *citado(a)* para sessão de *Mediação* (Art. 246 §1º CPC e Res. CNJ 354/2020).',``,`*📋 Processo:* \`${num}\``,`*📅 Audiência:* ${af}`,'','✅ *Confirme respondendo:*','👉 *CONFIRMO*','','⚠️ Não comparecimento sem justificativa implica *arquivamento* (Art. 334 §8º CPC).','','_Validade jurídica (Res. CNJ 354/2020)._'].join('\n');
+  return[`⚖️ *CITAÇÃO ELETRÔNICA — CONCILIAÇÃO*`,`_${serv}_`,'','Prezado(a), V.Sa. está sendo *citado(a)* (Art. 246 §1º CPC e Res. CNJ 354/2020).',``,`*📋 Processo:* \`${num}\``,`*📅 Audiência:* ${af}`,'','✅ *Confirme respondendo:*','👉 *CONFIRMO*','','⚠️ Não comparecimento sem justificativa implica *revelia* (Art. 344 CPC).','','_Validade jurídica (Res. CNJ 354/2020)._'].join('\n');
+}
+
+// ── CERTIDÕES ─────────────────────────────────────────────────────────────────
+function certTxt(tipo,p){
+  const dt=new Date();
+  const data=dt.toLocaleDateString('pt-BR',{day:'2-digit',month:'long',year:'numeric'});
+  const hora=dt.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+  const n=p.numero,r=p.reu,t=p.telefone;
+  const C={
+    wa_valida:`CERTIDÃO\n\nCertifico que, nos autos do processo n.º ${n}, em ${data}, às ${hora}, procedi à citação do(a) requerido(a) ${r} por meio do aplicativo WhatsApp, pelo número ${t}, tendo obtido êxito na referida citação.\n\nO(a) requerido(a) foi informado(a) da data, hora e local da audiência de conciliação designada nos autos.\n\nCertifico e dou fé.`,
+    wa_frustrada:`CERTIDÃO\n\nCertifico que, nos autos do processo n.º ${n}, em ${data}, às ${hora}, tentei citar o(a) requerido(a) ${r} por meio do WhatsApp, pelo número ${t}, não logrando êxito em razão de: _____________________________ [número inexistente / sem resposta / mensagem não entregue].\n\nCertifico e dou fé.`,
+    novos_dados:`CERTIDÃO\n\nCertifico que, nos autos do processo n.º ${n}, em ${data}, às ${hora}, tendo em vista a aproximação da audiência designada e a ausência de citação do(a) requerido(a) ${r}, foi expedida intimação à parte autora para indicar, em 24 (vinte e quatro) horas, novos meios de localização do(a) requerido(a), sob pena de cancelamento da audiência por citação frustrada.\n\nCertifico e dou fé.`,
+    aud_nao_realiz:`CERTIDÃO\n\nCertifico que, nos autos do processo n.º ${n}, na data de ${data}, foi designada audiência de conciliação que restou prejudicada em razão de _____________________________, conforme determina o art. _____ do CPC.\n\nCertifico e dou fé.`,
+  };
+  return C[tipo]||'';
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+//  TAB ROBÔS
+// ════════════════════════════════════════════════════════════════════════════
+function renderRobos(){
+  $('#tab-robos').innerHTML=`
+    <div class="robos-search-wrap"><input class="robos-search" id="rbusca" placeholder="🔍  Buscar robô…"></div>
+    <div class="robos-grupos" id="rgrupos"></div>
+    <div class="robos-lista" id="rlista"></div>`;
+  renderRGrupos();renderRLista();
+  $('#rbusca').oninput=e=>{const t=e.target.value.trim().toLowerCase();
+    if(t.length>=2)renderRBusca(t);else renderRLista();};
+}
+function renderRGrupos(){
+  const c=$('#rgrupos');c.innerHTML='';
+  GRUPOS.forEach(g=>{
+    const t=document.createElement('div');
+    t.className='rgrup'+(g.id===S.rgrupo?' ativo':'');
+    t.innerHTML=`${g.icon} <span>${g.nome}</span> <span class="badge">${g.robos.length}</span>`;
+    t.onclick=()=>{S.rgrupo=g.id;renderRGrupos();renderRLista();};
+    c.appendChild(t);
+  });
+}
+function renderRLista(){
+  const c=$('#rlista');const g=GRUPOS.find(g=>g.id===S.rgrupo);c.innerHTML='';
+  g.robos.forEach(r=>c.appendChild(roboCard(r)));
+}
+function renderRBusca(t){
+  const c=$('#rlista');c.innerHTML='';let total=0;
+  GRUPOS.forEach(g=>{
+    const m=g.robos.filter(r=>r.nome.toLowerCase().includes(t)||(r.desc||'').toLowerCase().includes(t));
+    if(!m.length)return;
+    const l=document.createElement('div');l.className='busca-grupo-label';
+    l.style.cssText='font:600 10px;color:#5a7a9a;text-transform:uppercase;letter-spacing:.6px;padding:7px 2px 4px';
+    l.textContent=`${g.icon} ${g.nome}`;c.appendChild(l);
+    m.forEach(r=>{c.appendChild(roboCard(r));total++;});
+  });
+  if(!total)c.innerHTML='<p style="color:#5a7a9a;text-align:center;padding:30px 0">Nenhum robô encontrado.</p>';
+}
+function roboCard(r){
+  const d=document.createElement('div');d.className='robo-card';
+  d.innerHTML=`<div class="robo-head">
+    <div class="robo-row1"><span class="robo-icon">${r.icon}</span><div class="robo-nome">${esc(r.nome)}</div></div>
+    <div class="robo-desc">${esc(r.desc)}</div>
+    <div class="robo-actions">
+      <button class="btn-robo-play">▶ Iniciar</button>
+      <button class="btn-robo-lote">🔁 Lote</button>
+    </div></div>`;
+  d.querySelector('.btn-robo-play').onclick=()=>{
+    // vai pra aba expedir e roda
+    document.querySelector('.ntab[data-tab="expedir"]').click();
+    setTimeout(()=>runRobo(r.id,()=>{}),200);
+  };
+  d.querySelector('.btn-robo-lote').onclick=()=>toast('Modo lote — informe os processos na aba Expedir.','info');
+  return d;
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+//  TAB AUDITORIA
+// ════════════════════════════════════════════════════════════════════════════
+function renderAudit(){
+  const total=S.audit.length,ok=S.audit.filter(e=>e.ok).length,err=total-ok;
+  const durs=S.audit.filter(e=>e.dur).map(e=>e.dur);
+  const media=durs.length?Math.round(durs.reduce((a,b)=>a+b,0)/durs.length):0;
+  $('#tab-audit').innerHTML=`
+    <div class="audit-header">
+      <span class="audit-titulo">📊 Auditoria de Execuções</span>
+      <div class="audit-actions">
+        <button class="btn-sm btn-export" id="bcsv">⬇ CSV</button>
+        <button class="btn-sm btn-danger" id="blim">🗑</button>
+      </div></div>
+    <div class="audit-stats">
+      <div class="stat-cell s-total"><div class="stat-val">${total}</div><div class="stat-lbl">Total</div></div>
+      <div class="stat-cell s-ok"><div class="stat-val">${ok}</div><div class="stat-lbl">OK</div></div>
+      <div class="stat-cell s-err"><div class="stat-val">${err}</div><div class="stat-lbl">Falhas</div></div>
+      <div class="stat-cell s-dur"><div class="stat-val">${media?media+'s':'—'}</div><div class="stat-lbl">Média</div></div>
+    </div>
+    <div class="audit-lista">
+      ${total===0?'<div class="audit-empty">Nenhuma execução registrada.<br>Inicie um robô para monitorar.</div>':
+        S.audit.map(e=>{const d=new Date(e.ts);
+          const ts=d.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'})+' '+d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+          return `<div class="audit-item ${e.ok?'a-ok':'a-fail'}">
+            <div class="a-dot"></div>
+            <div class="a-info"><div class="a-nome">${esc(e.roboNome)}</div>
+            ${e.numero&&e.numero!=='—'?`<div class="a-num">${esc(e.numero)}</div>`:''}</div>
+            <div class="a-meta"><div class="a-ts">${ts}</div><div class="a-dur">${e.dur?e.dur+'s':'—'}</div></div>
+          </div>`;}).join('')}
+    </div>`;
+  $('#bcsv').onclick=()=>toast('CSV exportado (download simulado no preview).','info');
+  $('#blim').onclick=()=>{if(confirm(`Apagar ${total} registros?`)){S.audit=[];renderAudit();updateBadge();toast('Auditoria apagada.','err');}};
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+//  TAB PROTOCOLO
+// ════════════════════════════════════════════════════════════════════════════
+function renderProto(){
+  $('#tab-proto').innerHTML=`<div class="proto-wrap">
+    <div class="proto-section">
+      <div class="proto-section-title">Fluxo de Citação · Art. 246 CPC</div>
+      <div class="proto-rule info"><div class="proto-rule-title">📱 1º Passo — WhatsApp (Prioridade)</div>
+        <div class="proto-rule-body">A citação por WhatsApp é a modalidade prioritária em todos os processos, salvo decisão expressa indeferindo-a (Art. 246 §1º CPC + Res. CNJ 354/2020).<br><br>💡 <em>Carta e WA podem ser expedidos simultaneamente.</em></div></div>
+      <div class="proto-rule"><div class="proto-rule-title">✉ 2º Passo — Expedição de Ato</div>
+        <div class="proto-rule-body">Se o WhatsApp não for efetivado, expedir carta eletrônica ou mandado conforme a decisão judicial (Art. 246 I/II/III CPC).</div></div>
+      <div class="proto-rule warn"><div class="proto-rule-title">⏰ 3º Passo — Audiência Próxima (&lt; 7 dias)</div>
+        <div class="proto-rule-body">Intimar a parte autora para indicar novos dados em <strong>24 horas</strong>.<br>• Sem resposta → cancelar audiência.<br>• Com dados novos → cancelar + reagendar imediatamente.</div></div>
+      <div class="proto-rule"><div class="proto-rule-title">📋 4º Passo — Certidão</div>
+        <div class="proto-rule-body">Certificar o resultado da citação no PROJUDI. Ato cartorário obrigatório antes de qualquer movimentação.</div></div>
+    </div>
+    <div class="proto-section">
+      <div class="proto-section-title">Regras de Cancelamento</div>
+      <div class="proto-rule danger"><div class="proto-rule-title">🚫 PROIBIDO — Carta Precatória</div>
+        <div class="proto-rule-body">Processos com carta precatória expedida <strong>NUNCA devem ser cancelados</strong> por ausência de retorno. Manter sempre em pauta.</div></div>
+      <div class="proto-rule warn"><div class="proto-rule-title">⚠ Carta ou Mandado Expedidos</div>
+        <div class="proto-rule-body">Cancelamento só após retorno da diligência. Prazo: somente 1 dia antes da audiência.</div></div>
+    </div>
+    <div class="proto-section">
+      <div class="proto-section-title">Regra de Ouro</div>
+      <div class="proto-rule info"><div class="proto-rule-title">📖 Leia Sempre a Decisão</div>
+        <div class="proto-rule-body">Cada processo pode ter especificidades que exigem condutas diferentes. A decisão judicial é o ponto de partida de toda ação cartorária.</div></div>
+    </div>
+  </div>`;
+}
+
+// ── UTILS ─────────────────────────────────────────────────────────────────────
+function updateBadge(){const n=S.audit.length;const el=$('#abadge');
+  el.style.display=n>0?'inline':'none';el.textContent=n+(n!==1?' registros':' registro');}
+function parseN(t){return t.split(/[\n,;]+/).map(s=>s.replace(/\s/g,'')).filter(s=>s.length>=5);}
+function copyTxt(t){try{navigator.clipboard.writeText(t);}catch(e){const ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);ta.select();try{document.execCommand('copy');}catch(_){}ta.remove();}}
+function toast(msg,tipo){const el=document.createElement('div');
+  el.className='toast'+(tipo==='err'?' toast-err':tipo==='info'?' toast-info':tipo==='gold'?' toast-gold':'');
+  el.textContent=msg;document.body.appendChild(el);setTimeout(()=>el.remove(),3000);}
+
+// ── BOOT + DEMO AUTOMÁTICA ────────────────────────────────────────────────────
+renderExpedir();renderRobos();renderAudit();renderProto();
+
+// DEMO: ao carregar, roda 1 robô automaticamente após 1.2s
+setTimeout(()=>{
+  toast('▶ Demonstração: expedindo citação eletrônica…','info');
+  // primeiro marca WA como frustrado para ativar a etapa de expedição visualmente
+  S.proc.etapa='wa_frustrada';renderExpedir();
+  setTimeout(()=>{
+    runRobo('expedir-citacao-eletronica',()=>{S.proc.etapa='expedido';});
+  },1400);
+},1200);
+</script>
+</body>
+</html>
